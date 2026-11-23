@@ -1,0 +1,11 @@
+PETUNJUK STOCK OPNAME SPPG - SUPABASE
+
+1. File index.html sudah diisi dengan Project URL dan Publishable Key yang Anda berikan.
+2. Ekstrak seluruh ZIP ke sebuah folder.
+3. Jalankan melalui web server/hosting (misalnya GitHub Pages, Netlify, atau Vercel), jangan dibuka dengan cara file:// jika browser memblokir module JavaScript.
+4. Jika memakai VS Code, buka folder ini, pasang ekstensi Live Server, lalu klik kanan index.html > Open with Live Server.
+5. Isi email dan password minimal 8 karakter, lalu klik Daftar akun baru.
+6. Jika konfirmasi email aktif, buka email dan klik tautan konfirmasi. Setelah itu kembali ke aplikasi dan login.
+7. Jika gagal, pesan error sekarang akan tampil di bawah judul halaman login. Kirim teks error tersebut untuk diperiksa.
+
+Catatan keamanan: Publishable key memang untuk frontend. Jangan pernah memasukkan Secret Key atau service_role key ke file HTML.
