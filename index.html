@@ -18,7 +18,7 @@ body{background:#f4f7fb;color:#172b4d}.navbar{background:#123b68}.card{border:0;
 <div class="row g-3 mb-4"><div class="col-md-4"><div class="card p-3"><div class="muted">Jenis barang aktif</div><div class="fs-2 fw-bold" id="totalItems">0</div></div></div><div class="col-md-4"><div class="card p-3"><div class="muted">Status aman</div><div class="fs-2 fw-bold text-success" id="safeCount">0</div></div></div><div class="col-md-4"><div class="card p-3"><div class="muted">Tidak aman</div><div class="fs-2 fw-bold text-danger" id="lowCount">0</div></div></div></div>
 <div class="card p-3"><div class="d-flex justify-content-between align-items-center mb-3"><h5 class="mb-0">Ringkasan stok harian</h5><button class="btn btn-sm btn-success" id="csvBtn">Export Excel (.xlsx)</button></div><div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Tanggal</th><th>Nama bahan/barang</th><th>Stok awal</th><th>Stok masuk</th><th>Stok keluar</th><th>Sisa</th><th>Status</th></tr></thead><tbody id="stockRows"></tbody></table></div><small class="muted">Status aman jika sisa stok ≥ batas minimum barang.</small></div></div>
 <div id="itemsPanel" class="d-none"><div class="card p-3 mb-3"><h5>Tambah bahan/barang</h5><form id="itemForm" class="row g-2"><div class="col-md-2"><input class="form-control" id="code" placeholder="Kode barang" required></div><div class="col-md-3"><input class="form-control" id="name" placeholder="Nama bahan/barang" required></div><div class="col-md-2"><input class="form-control" id="category" placeholder="Kategori"></div><div class="col-md-2"><input class="form-control" id="unit" placeholder="Satuan: kg/liter/pcs" required></div><div class="col-md-1"><input class="form-control" id="minimum" type="number" min="0" step="0.001" placeholder="Min." required></div><div class="col-md-2"><input class="form-control" id="initial" type="number" min="0" step="0.001" placeholder="Stok awal" value="0"></div><div class="col-12"><button class="btn btn-primary">Simpan barang</button></div></form><small class="muted">Stok awal dicatat sebagai transaksi saldo awal pada tanggal hari ini.</small></div><div class="card p-3"><h5>Daftar bahan/barang</h5><div class="table-responsive"><table class="table"><thead><tr><th>Kode</th><th>Nama</th><th>Kategori</th><th>Satuan</th><th>Batas minimum</th><th>Aksi</th></tr></thead><tbody id="itemRows"></tbody></table></div></div></div>
-<div id="txnPanel" class="d-none"><div class="card p-4" style="max-width:720px"><h5>Input barang masuk / keluar</h5><form id="txnForm"><label class="form-label">Tanggal</label><input class="form-control mb-3" id="txnDate" type="date" required><label class="form-label">Nama bahan/barang</label><select class="form-select mb-3" id="txnItem" required></select><label class="form-label">Jenis transaksi</label><select class="form-select mb-3" id="txnType"><option value="masuk">Stok masuk</option><option value="keluar">Stok keluar</option></select><label class="form-label">Jumlah</label><input class="form-control mb-3" id="txnQty" type="number" min="0.001" step="0.001" required><label class="form-label">Keterangan</label><input class="form-control mb-3" id="txnNote" placeholder="Opsional"><button class="btn btn-primary">Simpan transaksi</button></form></div></div>
+<div id="txnPanel" class="d-none"><div class="card p-4" style="max-width:720px"><h5>Input barang masuk / keluar</h5><form id="txnForm"><label class="form-label">Tanggal</label><input class="form-control mb-3" id="txnDate" type="date" required><label class="form-label">Scan barcode / kode barang</label><div class="input-group mb-2"><input class="form-control" id="txnBarcode" placeholder="Scan barcode atau ketik kode barang" autocomplete="off"><button class="btn btn-outline-primary" type="button" id="cameraScanBtn">Scan Kamera</button></div><div id="scanStatus" class="form-text mb-3">Gunakan scanner USB/Bluetooth atau tombol Scan Kamera.</div><div id="cameraBox" class="mb-3 d-none"><video id="barcodeVideo" class="w-100 rounded border" autoplay playsinline style="max-height:260px;background:#111"></video><div class="d-flex gap-2 mt-2"><small class="text-muted flex-grow-1" id="cameraHint">Arahkan kamera ke barcode barang.</small><button type="button" class="btn btn-sm btn-outline-danger" id="stopCameraBtn">Tutup kamera</button></div></div><label class="form-label">Nama bahan/barang</label><select class="form-select mb-3" id="txnItem" required></select><label class="form-label">Jenis transaksi</label><select class="form-select mb-3" id="txnType"><option value="masuk">Stok masuk</option><option value="keluar">Stok keluar</option></select><label class="form-label">Jumlah</label><input class="form-control mb-3" id="txnQty" type="number" min="0.001" step="0.001" required><label class="form-label">Keterangan</label><input class="form-control mb-3" id="txnNote" placeholder="Opsional"><button class="btn btn-primary">Simpan transaksi</button></form></div></div>
 <div id="reportPanel" class="d-none"><div class="card p-3"><h5>Laporan stok harian</h5><div class="d-flex gap-2 mb-3"><input id="reportDate" type="date" class="form-control" style="max-width:220px"><button id="showReport" class="btn btn-outline-primary">Tampilkan</button><button id="reportCsv" class="btn btn-success">Export Excel (.xlsx)</button></div><div class="table-responsive"><table class="table"><thead><tr><th>Tanggal</th><th>Nama barang</th><th>Stok awal</th><th>Masuk</th><th>Keluar</th><th>Sisa</th><th>Status</th></tr></thead><tbody id="reportRows"></tbody></table></div></div></div>
 <div id="notice" class="mt-3"></div>
 </section></main>
@@ -79,7 +79,7 @@ async function loadGuest(){try{const {data,error}=await sb.rpc('public_stock_sum
 $('loginBtn').onclick=async()=>{try{if(!configured)return msg('authMsg','Konfigurasi Supabase belum diisi.','warning');msg('authMsg','Sedang memproses login...','info');const {data,error}=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)msg('authMsg',escapeHtml(error.message),'danger');else await enter(data.user);}catch(e){msg('authMsg','Gagal menghubungi Supabase: '+escapeHtml(e.message),'danger');}};
 $('signupBtn').onclick=async()=>{try{if(!configured)return msg('authMsg','Konfigurasi Supabase belum diisi.','warning');const email=$('email').value.trim(),password=$('password').value;if(!email||!password)return msg('authMsg','Isi email dan password terlebih dahulu.','warning');if(password.length<8)return msg('authMsg','Password minimal 8 karakter.','warning');msg('authMsg','Sedang membuat akun...','info');const {data,error}=await sb.auth.signUp({email,password});if(error)msg('authMsg',escapeHtml(error.message),'danger');else if(data.user && !data.session)msg('authMsg','Pendaftaran berhasil. Silakan cek email untuk konfirmasi, lalu login.','success');else msg('authMsg','Akun berhasil dibuat. Silakan login.','success');}catch(e){msg('authMsg','Pendaftaran gagal menghubungi Supabase: '+escapeHtml(e.message),'danger');}};
 $('logoutBtn').onclick=async()=>{await sb.auth.signOut();location.reload();};
-$('itemsTab').onclick=()=>panel('items');$('txnTab').onclick=()=>panel('txn');$('reportTab').onclick=()=>{panel('report');showReport();};
+$('itemsTab').onclick=()=>{stopBarcodeCamera();panel('items');};$('txnTab').onclick=()=>panel('txn');$('reportTab').onclick=()=>{stopBarcodeCamera();panel('report');showReport();};
 $('itemForm').onsubmit=async e=>{e.preventDefault();const payload={code:$('code').value.trim(),name:$('name').value.trim(),category:$('category').value.trim()||null,unit:$('unit').value.trim(),min_stock:Number($('minimum').value)};let {data,error}=await sb.from('items').insert(payload).select().single();if(error)return msg('notice',escapeHtml(error.message),'danger');const initial=Number($('initial').value||0);if(initial>0){const {error:te}=await sb.from('stock_transactions').insert({item_id:data.id,txn_date:today(),txn_type:'penyesuaian_awal',qty:initial,note:'Saldo awal saat input barang',created_by:currentUser.id});if(te)return msg('notice','Barang dibuat, tetapi saldo awal gagal: '+escapeHtml(te.message),'warning');}e.target.reset();$('initial').value=0;await loadData();msg('notice','Barang berhasil ditambahkan.','success');};
 
 $('itemRows').addEventListener('click',async e=>{
@@ -104,6 +104,60 @@ $('itemRows').addEventListener('click',async e=>{
   const {error}=await sb.from('items').update({active:false}).eq('id',item.id);
   if(error)return msg('notice',escapeHtml(error.message),'danger');
   await loadData(); await loadGuest(); msg('notice','Barang berhasil dinonaktifkan. Riwayat transaksi tidak dihapus.','success');
+ }
+});
+
+let barcodeStream=null, barcodeTimer=null, barcodeDetector=null;
+function selectScannedBarcode(raw){
+ const code=String(raw||'').trim();
+ if(!code)return;
+ $('txnBarcode').value=code;
+ const item=items.find(i=>String(i.code).trim().toLowerCase()===code.toLowerCase());
+ if(item){
+  $('txnItem').value=String(item.id);
+  $('scanStatus').textContent='Barang ditemukan: '+item.name;
+  $('scanStatus').className='form-text mb-3 text-success';
+  $('txnQty').focus();
+ }else{
+  $('txnItem').value='';
+  $('scanStatus').textContent='Barcode "'+code+'" belum terdaftar. Periksa Kode Barang di Master Barang.';
+  $('scanStatus').className='form-text mb-3 text-danger';
+ }
+}
+$('txnBarcode').addEventListener('change',e=>selectScannedBarcode(e.target.value));
+$('txnBarcode').addEventListener('keydown',e=>{
+ if(e.key==='Enter'){e.preventDefault();selectScannedBarcode(e.target.value);}
+});
+async function stopBarcodeCamera(){
+ if(barcodeTimer){clearInterval(barcodeTimer);barcodeTimer=null;}
+ if(barcodeStream){barcodeStream.getTracks().forEach(track=>track.stop());barcodeStream=null;}
+ $('barcodeVideo').srcObject=null;
+ $('cameraBox').classList.add('d-none');
+}
+$('stopCameraBtn').addEventListener('click',stopBarcodeCamera);
+$('cameraScanBtn').addEventListener('click',async()=>{
+ if(!navigator.mediaDevices?.getUserMedia)return msg('notice','Browser ini tidak mendukung akses kamera. Gunakan scanner USB/Bluetooth.','warning');
+ if(!window.BarcodeDetector)return msg('notice','Fitur scan barcode kamera belum didukung browser ini. Coba Chrome terbaru atau gunakan scanner USB/Bluetooth.','warning');
+ try{
+  await stopBarcodeCamera();
+  barcodeDetector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128','code_39','itf','qr_code','codabar','data_matrix']});
+  barcodeStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+  $('cameraBox').classList.remove('d-none');
+  $('barcodeVideo').srcObject=barcodeStream;
+  await $('barcodeVideo').play();
+  barcodeTimer=setInterval(async()=>{
+   if(!barcodeStream)return;
+   try{
+    const found=await barcodeDetector.detect($('barcodeVideo'));
+    if(found.length){
+     selectScannedBarcode(found[0].rawValue);
+     await stopBarcodeCamera();
+    }
+   }catch(err){}
+  },250);
+ }catch(err){
+  await stopBarcodeCamera();
+  msg('notice','Kamera tidak dapat dibuka. Izinkan akses kamera dan pastikan website dibuka melalui HTTPS. '+escapeHtml(err.message||''),'danger');
  }
 });
 $('txnForm').onsubmit=async e=>{e.preventDefault();const itemId=Number($('txnItem').value),type=$('txnType').value,qty=Number($('txnQty').value),date=$('txnDate').value;const available=txns.filter(t=>t.item_id===itemId&&t.txn_date<=date).reduce((a,t)=>a+(t.txn_type==='keluar'?-Number(t.qty):Number(t.qty)),0);if(type==='keluar'&&qty>available)return msg('notice','Stok tidak mencukupi untuk transaksi keluar.','danger');const {error}=await sb.from('stock_transactions').insert({item_id:itemId,txn_date:date,txn_type:type,qty,note:$('txnNote').value.trim()||null,created_by:currentUser.id});if(error)return msg('notice',escapeHtml(error.message),'danger');e.target.reset();$('txnDate').value=today();await loadData();msg('notice','Transaksi berhasil disimpan.','success');};
